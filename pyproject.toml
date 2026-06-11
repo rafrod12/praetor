@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "praetor-security"
+version = "0.1.0"
+description = "Praetor: a distributed, agent-aware reference monitor. Every agent action, co-signed and accounted for."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Praetor Security" }]
+keywords = ["ai-agents", "security", "threshold-signatures", "audit", "mcp", "authorization"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Security",
+]
+dependencies = [
+    "cryptography>=42.0",
+]
+
+[project.optional-dependencies]
+server = [
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "pydantic>=2.6",
+]
+dev = [
+    "pytest>=8.0",
+    "httpx>=0.27",
+]
+
+[project.urls]
+Homepage = "https://rafrod12.github.io/praetor/"
+Repository = "https://github.com/rafrod12/praetor"
+
+[tool.setuptools.packages.find]
+include = ["praetor*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Praetor — Every agent action, co-signed and accounted for</title>
+<meta name="description" content="Praetor is a distributed, agent-aware reference monitor. Non-bypassable authorization for AI agents: m-of-n threshold co-signing, capability tokens, tamper-evident audit.">
+<style>
+  :root {
+    --bg: #0b0e14;
+    --bg-raise: #11151f;
+    --bg-card: #141925;
+    --line: #232b3d;
+    --txt: #d7deeb;
+    --txt-dim: #8b95ab;
+    --gold: #d4a843;
+    --gold-dim: #9a7a2e;
+    --red: #e05252;
+    --green: #4ec77a;
+    --mono: "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+    --sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--txt); font-family: var(--sans); line-height: 1.6; }
+  a { color: var(--gold); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 0 24px; }
+  code, pre { font-family: var(--mono); }
+
+  /* nav */
+  nav { position: sticky; top: 0; z-index: 50; background: rgba(11,14,20,.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 60px; }
+  .brand { font-family: var(--mono); font-weight: 700; font-size: 1.1rem; color: var(--txt); letter-spacing: .04em; }
+  .brand .sigil { color: var(--gold); }
+  nav ul { display: flex; gap: 26px; list-style: none; }
+  nav ul a { color: var(--txt-dim); font-size: .92rem; }
+  nav ul a:hover { color: var(--gold); text-decoration: none; }
+  .cta-sm { border: 1px solid var(--gold-dim); color: var(--gold) !important; padding: 7px 14px; border-radius: 6px; }
+  .cta-sm:hover { background: var(--gold); color: #0b0e14 !important; }
+
+  /* hero */
+  header { padding: 96px 0 72px; border-bottom: 1px solid var(--line);
+    background: radial-gradient(ellipse 70% 55% at 50% -10%, rgba(212,168,67,.10), transparent); }
+  .kicker { font-family: var(--mono); color: var(--gold); font-size: .85rem; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 18px; }
+  h1 { font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1.12; font-weight: 800; max-width: 21ch; }
+  h1 em { font-style: normal; color: var(--gold); }
+  .sub { color: var(--txt-dim); font-size: 1.15rem; max-width: 56ch; margin: 22px 0 34px; }
+  .btn { display: inline-block; font-weight: 600; padding: 13px 26px; border-radius: 8px; font-size: 1rem; }
+  .btn-gold { background: var(--gold); color: #0b0e14; }
+  .btn-gold:hover { background: #e6bd55; text-decoration: none; }
+  .btn-ghost { border: 1px solid var(--line); color: var(--txt); margin-left: 12px; }
+  .btn-ghost:hover { border-color: var(--gold-dim); text-decoration: none; }
+  .hero-term { margin-top: 56px; background: var(--bg-raise); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .term-bar { display: flex; gap: 7px; padding: 11px 14px; border-bottom: 1px solid var(--line); }
+  .term-bar i { width: 11px; height: 11px; border-radius: 50%; background: var(--line); }
+  .hero-term pre { padding: 20px 22px; font-size: .86rem; overflow-x: auto; color: var(--txt-dim); }
+  .ok { color: var(--green); } .bad { color: var(--red); } .gold { color: var(--gold); } .dim { color: #5a6478; }
+
+  /* sections */
+  section { padding: 84px 0; border-bottom: 1px solid var(--line); }
+  h2 { font-size: 1.9rem; margin-bottom: 10px; }
+  .lede { color: var(--txt-dim); max-width: 62ch; margin-bottom: 44px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
+  .card { background: var(--bg-card); border: 1px solid var(--line); border-radius: 10px; padding: 26px; }
+  .card h3 { font-size: 1.05rem; margin-bottom: 8px; }
+  .card .num { font-family: var(--mono); color: var(--gold); font-size: .8rem; display: block; margin-bottom: 12px; }
+  .card p { color: var(--txt-dim); font-size: .93rem; }
+
+  /* code block */
+  .codeblock { background: var(--bg-raise); border: 1px solid var(--line); border-radius: 10px; padding: 22px 24px; overflow-x: auto; font-size: .88rem; line-height: 1.7; }
+  .codeblock .kw { color: #c792ea; } .codeblock .str { color: #9ece6a; } .codeblock .fn { color: #82aaff; } .codeblock .cm { color: #5a6478; }
+
+  /* pricing */
+  .tiers { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; align-items: stretch; }
+  .tier { background: var(--bg-card); border: 1px solid var(--line); border-radius: 12px; padding: 30px; display: flex; flex-direction: column; }
+  .tier.feature { border-color: var(--gold-dim); position: relative; }
+  .tier.feature::before { content: "DESIGN PARTNER PROGRAM"; position: absolute; top: -11px; left: 24px; background: var(--gold); color: #0b0e14; font-family: var(--mono); font-size: .66rem; font-weight: 700; letter-spacing: .1em; padding: 3px 10px; border-radius: 4px; }
+  .tier h3 { font-size: 1.15rem; }
+  .price { font-size: 2rem; font-weight: 800; margin: 14px 0 2px; }
+  .price small { font-size: .85rem; color: var(--txt-dim); font-weight: 400; }
+  .tier ul { list-style: none; margin: 22px 0 28px; flex: 1; }
+  .tier li { padding: 6px 0 6px 26px; position: relative; color: var(--txt-dim); font-size: .92rem; }
+  .tier li::before { content: "✓"; position: absolute; left: 0; color: var(--gold); font-weight: 700; }
+  .tier .btn { text-align: center; }
+
+  /* faq */
+  details { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 10px; background: var(--bg-card); }
+  summary { cursor: pointer; padding: 16px 20px; font-weight: 600; list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: "▸ "; color: var(--gold); }
+  details[open] summary::before { content: "▾ "; }
+  details p { padding: 0 20px 16px; color: var(--txt-dim); font-size: .94rem; }
+
+  footer { padding: 44px 0 60px; color: var(--txt-dim); font-size: .88rem; }
+  footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <span class="brand"><span class="sigil">⟁</span> PRAETOR</span>
+    <ul>
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#code">Integrate</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a class="cta-sm" href="https://github.com/rafrod12/praetor">GitHub ↗</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header>
+  <div class="wrap">
+    <div class="kicker">// distributed reference monitor for AI agents</div>
+    <h1>Your agents act with real power. <em>Who co-signs their actions?</em></h1>
+    <p class="sub">Praetor is a non-bypassable broker between your AI agents and everything they touch.
+    High-risk actions — payments, deletes, tool calls, secret access — require an
+    <strong>m-of-n quorum of independent signing nodes</strong>. Every decision lands in a
+    tamper-evident audit log. No single compromised node can let anything through.</p>
+    <a class="btn btn-gold" href="https://github.com/rafrod12/praetor#quick-start">Get started — it's open source</a>
+    <a class="btn btn-ghost" href="#partner">Become a design partner</a>
+
+    <div class="hero-term">
+      <div class="term-bar"><i></i><i></i><i></i></div>
+      <pre>
+$ python demo.py
+
+<span class="dim">[1] agent-alpha → read crm://contacts</span>          <span class="ok">✓ capability token (low-risk, no quorum)</span>
+<span class="dim">[2] agent-alpha → payment $250,000 → vendor</span>   <span class="gold">⟁ fanned out to 5 signing nodes…</span>
+                                              <span class="ok">✓ APPROVED — 5-of-5 co-signed (3 required)</span>
+<span class="dim">[3] agent-alpha → disable_audit</span>               <span class="bad">✗ DENIED — statically forbidden, logged</span>
+<span class="dim">[4] degraded cluster (2 of 5 nodes alive)</span>     <span class="bad">✗ payment DENIED — quorum unreachable, fail-closed</span>
+<span class="dim">[5] attacker edits audit entry #1</span>             <span class="bad">⚠ TAMPER DETECTED — hash chain broken at index 1</span>
+
+<span class="ok">12 tests passed</span> · audit head <span class="gold">a3f29c…</span> verified</pre>
+    </div>
+  </div>
+</header>
+
+<section id="problem">
+  <div class="wrap">
+    <h2>The gap nobody's defending</h2>
+    <p class="lede">Prompt-injection firewalls inspect what goes <em>into</em> the model. Posture tools report after the fact.
+    But the moment an agent <strong>acts</strong> — wires money, calls an MCP tool, touches a secret — nothing stands in the way.
+    One leaked API key, one poisoned tool, one rogue loop, and it's done. Machine identities already outnumber humans 82-to-1.</p>
+    <div class="grid">
+      <div class="card"><span class="num">CROWDED →</span><h3>LLM firewalls</h3><p>Lakera, Prompt Security, Aim — consolidating into platform vendors. Input-side only. The action still executes.</p></div>
+      <div class="card"><span class="num">CROWDED →</span><h3>AI-SOC &amp; posture</h3><p>Dashboards and reports. They tell you what your agents <em>did</em>, after they did it.</p></div>
+      <div class="card" style="border-color: var(--gold-dim);"><span class="num">THE GAP →</span><h3>Runtime action authorization</h3><p>Inline, non-bypassable, cryptographic authorization at the moment of action. That's Praetor.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <h2>How it works</h2>
+    <p class="lede">A reference monitor — the security field's gold standard — rebuilt for agents and made distributed so it has no single point of compromise.</p>
+    <div class="grid">
+      <div class="card"><span class="num">01 / MEDIATION</span><h3>Complete mediation</h3><p>Agents act only through the SDK's <code>guarded()</code> boundary. If Praetor denies, the action never runs. No direct path to tools, secrets, or other agents.</p></div>
+      <div class="card"><span class="num">02 / QUORUM</span><h3>Threshold co-signing</h3><p>The orchestrator is segmented across independent nodes. High-risk actions need <strong>3-of-5</strong> Ed25519 co-signatures. Compromise one node — even ours — and you get nothing.</p></div>
+      <div class="card"><span class="num">03 / SPEED</span><h3>Tiered consensus</h3><p>Routine reads get single-use capability tokens — no round trip. Only consequential actions pay the quorum cost. Consensus on the exception path, not the hot path.</p></div>
+      <div class="card"><span class="num">04 / PROOF</span><h3>Tamper-evident audit</h3><p>Every approve and deny is hash-chained. Edit history and the chain breaks — detectably. Checkpoints anchor externally so even the operator can't rewrite the past.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="code">
+  <div class="wrap">
+    <h2>One line at the action boundary</h2>
+    <p class="lede">No re-architecture. Wrap the action; Praetor authorizes, then your code runs — or it doesn't.</p>
+    <pre class="codeblock"><span class="kw">from</span> praetor <span class="kw">import</span> Orchestrator, PraetorClient
+
+orch  = <span class="fn">Orchestrator</span>(node_count=<span class="gold">5</span>, threshold=<span class="gold">3</span>)
+agent = <span class="fn">PraetorClient</span>(agent_id=<span class="str">"agent-alpha"</span>, orchestrator=orch)
+
+<span class="cm"># High-risk: requires 3-of-5 nodes to co-sign before release_funds() runs.</span>
+agent.<span class="fn">guarded</span>(<span class="str">"payment"</span>, <span class="str">"bank://acct/990 -&gt; vendor/acme"</span>,
+              perform=<span class="kw">lambda</span>: release_funds(),
+              metadata={<span class="str">"amount"</span>: <span class="gold">250_000</span>, <span class="str">"currency"</span>: <span class="str">"USD"</span>})</pre>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="wrap">
+    <h2>Pricing</h2>
+    <p class="lede">The data plane is open source and runs in your environment — we never hold your secrets. You pay for the control plane: policy, identity, audit, and the people behind it.</p>
+    <div class="tiers">
+      <div class="tier">
+        <h3>Open Source</h3>
+        <div class="price">$0 <small>forever</small></div>
+        <ul>
+          <li>Full reference monitor (Apache-2.0)</li>
+          <li>m-of-n threshold co-signing</li>
+          <li>Capability tokens + risk policy</li>
+          <li>Hash-chained audit log</li>
+          <li>Community support</li>
+        </ul>
+        <a class="btn btn-ghost" style="margin:0" href="https://github.com/rafrod12/praetor">Clone the repo</a>
+      </div>
+      <div class="tier feature">
+        <h3>Design Partner</h3>
+        <div class="price">$2,000 <small>/ month · limited seats</small></div>
+        <ul>
+          <li>White-glove integration with your agent stack</li>
+          <li>Custom risk policies for your domain</li>
+          <li>Direct roadmap influence</li>
+          <li>Founding-customer pricing locked for 24 months</li>
+          <li>Slack channel with the founding team</li>
+        </ul>
+        <a class="btn btn-gold" style="margin:0" href="#partner">Apply now</a>
+      </div>
+      <div class="tier">
+        <h3>Enterprise</h3>
+        <div class="price">Custom</div>
+        <ul>
+          <li>Managed multi-host signing quorum</li>
+          <li>External audit anchoring + compliance exports</li>
+          <li>SSO / SIEM integrations</li>
+          <li>SLA &amp; dedicated support</li>
+        </ul>
+        <a class="btn btn-ghost" style="margin:0" href="mailto:praetor.security.hq@gmail.com?subject=Praetor%20Enterprise%20Inquiry">Talk to us</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="partner">
+  <div class="wrap">
+    <h2>Design-partner program — 5 seats</h2>
+    <p class="lede">You're deploying agents that touch money, customer data, or production systems. We'll embed with your team,
+    integrate Praetor end-to-end, and build the policies your auditors will ask for — before they ask.
+    In exchange: your feedback shapes the product, and you lock founding pricing.</p>
+    <a class="btn btn-gold" href="https://github.com/rafrod12/praetor/issues/new?template=design-partner.yml&title=Design+partner+application">Apply via GitHub</a>
+    <a class="btn btn-ghost" href="mailto:praetor.security.hq@gmail.com?subject=Praetor%20Design%20Partner%20Application&body=Company%3A%0AAgent%20use%20case%3A%0AWhat%20your%20agents%20can%20touch%20(money%2Fdata%2Fprod)%3A%0ATimeline%3A">Apply via email</a>
+  </div>
+</section>
+
+<section id="faq" style="border-bottom:none;">
+  <div class="wrap">
+    <h2>FAQ</h2>
+    <div style="margin-top:34px;">
+      <details><summary>Doesn't a central broker add latency?</summary><p>Only where it matters. Low-risk actions use locally-verifiable capability tokens — no round trip. The m-of-n quorum fires only on high-risk actions (payments, deletes, external tools, secret access), which are rare by construction.</p></details>
+      <details><summary>Isn't the broker itself a single point of failure?</summary><p>No — that's the whole design. The orchestrator is segmented across independent signing nodes. Authorization requires a threshold (default 3-of-5) of valid co-signatures. One compromised or dead node can neither approve an action nor block the cluster.</p></details>
+      <details><summary>What happens when the quorum is unreachable?</summary><p>Fail-closed for anything new or risky. The demo shows this live: with only 2 of 5 nodes alive, a payment is denied and the denial is logged.</p></details>
+      <details><summary>Do you see our data or hold our credentials?</summary><p>No. The data plane runs in your environment and the orchestrator brokers <em>action metadata and decisions</em>, not payloads. Credentials stay in your vault; Praetor issues short-lived, scoped capability tokens.</p></details>
+      <details><summary>Is this just a service mesh / API gateway?</summary><p>A mesh routes bytes. Praetor reasons about <em>agent actions</em>: it classifies intent, enforces per-action least privilege, cryptographically co-signs the risky ones, and emits an agent-attributed, tamper-evident audit trail.</p></details>
+      <details><summary>How does this make money if it's open source?</summary><p>The proven OSS model: the data plane (this repo) is free forever. The paid control plane adds managed multi-host quorums, policy management, identity issuance, compliance exports, and support.</p></details>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span><span class="brand"><span class="sigil">⟁</span> PRAETOR</span> · Every agent action, co-signed and accounted for.</span>
+    <span><a href="https://github.com/rafrod12/praetor">GitHub</a> · <a href="mailto:praetor.security.hq@gmail.com">Contact</a> · Apache-2.0</span>
+  </div>
+</footer>
+
+</body>
+</html>

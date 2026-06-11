@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+
+# Research artifacts
+.firecrawl/
+
+# Internal business documents (not for the public repo)
+*.docx
+gen_docx.py
+gen_praetor_docx.py
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Editors
+.vscode/
+.idea/
+
+# Local audit logs
+*.audit.jsonl

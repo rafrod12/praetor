@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Enterprise inquiry
+    url: mailto:praetor.security.hq@gmail.com
+    about: Managed multi-host quorums, compliance exports, SLAs.

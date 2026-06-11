@@ -1,0 +1,44 @@
+name: Design Partner Application
+description: Apply for one of 5 founding design-partner seats ($2k/mo, white-glove integration, founding pricing locked 24 months).
+title: "Design partner application: <your company>"
+labels: ["design-partner"]
+body:
+  - type: input
+    id: company
+    attributes:
+      label: Company
+      placeholder: Acme Fintech, Inc.
+    validations:
+      required: true
+  - type: textarea
+    id: use-case
+    attributes:
+      label: What are your agents doing?
+      description: Frameworks, protocols (MCP? A2A?), and what the agents are for.
+      placeholder: We run LangGraph agents that reconcile invoices and issue refunds via Stripe...
+    validations:
+      required: true
+  - type: textarea
+    id: blast-radius
+    attributes:
+      label: What can your agents touch?
+      description: Money, customer data, production systems, secrets — the blast radius if one goes rogue.
+    validations:
+      required: true
+  - type: dropdown
+    id: timeline
+    attributes:
+      label: When do you need authorization in place?
+      options:
+        - We already had an incident
+        - This quarter
+        - Next quarter
+        - Exploring
+    validations:
+      required: true
+  - type: input
+    id: contact
+    attributes:
+      label: Contact (email)
+    validations:
+      required: true
