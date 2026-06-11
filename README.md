@@ -41,6 +41,20 @@ It enforces four security pillars:
 ./run.ps1 serve        # or: python -m uvicorn praetor.server:app --port 8088
 ```
 
+### Docker
+
+```bash
+docker pull ghcr.io/rafrod12/praetor:edge
+docker run -p 8088:8088 ghcr.io/rafrod12/praetor:edge
+```
+
+### pip
+
+```bash
+pip install praetor-security   # core SDK
+pip install "praetor-security[server]"   # + FastAPI orchestrator server
+```
+
 ## The demo, in five beats
 
 1. **Routine read** → low-risk → capability token issued, action runs.

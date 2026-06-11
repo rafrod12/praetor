@@ -13,8 +13,8 @@ venv/
 
 # Internal business documents (not for the public repo)
 *.docx
-gen_docx.py
-gen_praetor_docx.py
+gen_*docx.py
+launch/
 
 # OS
 Thumbs.db
