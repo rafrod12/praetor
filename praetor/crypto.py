@@ -44,6 +44,18 @@ class SignerKey:
     def generate(cls, node_id: str) -> "SignerKey":
         return cls(node_id=node_id, _private=Ed25519PrivateKey.generate())
 
+    @classmethod
+    def from_seed(cls, node_id: str, seed_hex: str) -> "SignerKey":
+        """Deterministic key from a 32-byte hex seed.
+
+        Lets a containerized node keep a stable identity across restarts by
+        injecting the seed as a secret instead of persisting key files.
+        """
+        seed = bytes.fromhex(seed_hex)
+        if len(seed) != 32:
+            raise ValueError("seed must be exactly 32 bytes of hex")
+        return cls(node_id=node_id, _private=Ed25519PrivateKey.from_private_bytes(seed))
+
     @property
     def public_key(self) -> Ed25519PublicKey:
         return self._private.public_key()

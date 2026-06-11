@@ -21,9 +21,11 @@ It enforces four security pillars:
 | Pillar | What it means | Where it lives |
 | --- | --- | --- |
 | **Complete mediation** | Every consequential action goes through the broker; the agent SDK only acts via `guarded(...)`. | [`praetor/sdk.py`](praetor/sdk.py), [`praetor/orchestrator.py`](praetor/orchestrator.py) |
-| **Threshold co-signing** | High-risk actions need an **m-of-n** quorum of independent signing nodes (default **3-of-5**). No single compromised node can approve. | [`praetor/crypto.py`](praetor/crypto.py), [`praetor/signer.py`](praetor/signer.py) |
-| **Tiered consensus** | Routine reads use fast, single-use **capability tokens**; only risky actions pay the quorum cost. | [`praetor/policy.py`](praetor/policy.py) |
-| **Tamper-evident audit** | Every decision is appended to a hash-chained log; any edit to history is detected by `verify()`. | [`praetor/audit.py`](praetor/audit.py) |
+| **Threshold co-signing** | High-risk actions need an **m-of-n** quorum of independent signing nodes (default **3-of-5**; critical actions escalate to **4-of-5**). No single compromised node can approve. | [`praetor/crypto.py`](praetor/crypto.py), [`praetor/signer.py`](praetor/signer.py) |
+| **Tiered consensus** | Routine reads use fast, single-use, **sender-bound capability tokens** (proof-of-possession, DPoP-style); only risky actions pay the quorum cost. | [`praetor/policy.py`](praetor/policy.py) |
+| **Tamper-evident audit** | Every decision is appended to a hash-chained log; any edit is detected by `verify()`, and quorum-signed checkpoints can be **anchored externally** so even the operator can't truncate history. | [`praetor/audit.py`](praetor/audit.py), [`praetor/anchor.py`](praetor/anchor.py) |
+
+Threat model and design rationale: [SECURITY.md](SECURITY.md)
 
 ## Quick start
 
@@ -48,6 +50,17 @@ docker pull ghcr.io/rafrod12/praetor:edge
 docker run -p 8088:8088 ghcr.io/rafrod12/praetor:edge
 ```
 
+### Separated signer nodes (docker compose)
+
+```bash
+docker compose up --build
+```
+
+This runs the orchestrator plus **five signer containers, each holding its own
+Ed25519 key**. Approving a high-risk action requires 3 of the 5 containers to
+independently agree (4 of 5 for critical actions); the orchestrator can only
+collect signatures, never produce them. Checkpoints anchor to a JSONL volume.
+
 ### pip
 
 ```bash
@@ -57,9 +70,9 @@ pip install "praetor-security[server]"   # + FastAPI orchestrator server
 
 ## The demo, in five beats
 
-1. **Routine read** → low-risk → capability token issued, action runs.
-2. **$250k wire payment** → high-risk → fanned out to 5 nodes, **3-of-5** co-sign → approved.
-3. **Disable the audit log** → statically forbidden → denied and logged.
+1. **Routine read** → low-risk → sender-bound capability token issued, action runs.
+2. **$250k wire payment** → amount ≥ $10k escalates to **CRITICAL** → **4-of-5** co-sign required → approved with signatures on record.
+3. **Disable the audit log** → statically forbidden → denied and logged. No quorum can approve it.
 4. **Degraded cluster (2 nodes)** → quorum can't be met → **fail-closed**, payment denied.
 5. **Tamper attempt** → an attacker edits a past log entry → `verify()` **detects** the break.
 
@@ -84,33 +97,46 @@ callable never runs.
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| GET  | `/health` | node count, threshold, audit head hash |
+| GET  | `/health` | node count, threshold, remote/anchoring status, audit head |
+| POST | `/agent/register` | register an agent's public key (binds its tokens) |
 | POST | `/action` | mediate an action (`agent_id`, `action`, `resource`, `metadata`) |
-| POST | `/capability/redeem` | redeem a single-use low-risk token |
+| POST | `/capability/redeem` | redeem a single-use token (`proof` = possession signature) |
 | GET  | `/audit` | recent audit entries + head hash |
-| GET  | `/audit/verify` | recompute the chain; reports any tampering |
-| POST | `/audit/checkpoint` | publish a checkpoint (external-anchor point) |
+| GET  | `/audit/verify` | recompute the chain (+ anchored checkpoints if configured) |
+| POST | `/audit/checkpoint` | quorum-sign the head and anchor it externally |
 
 ## Layout
 
 ```
 praetor/
-  crypto.py        Ed25519 keys + m-of-n threshold verification
-  policy.py        risk tiers (low / high / deny), fail-closed on unknown
+  crypto.py        Ed25519 keys (seedable) + m-of-n threshold verification
+  policy.py        risk tiers (low / high / critical / deny), advisory scorers,
+                   fail-closed on unknown
   audit.py         hash-chained tamper-evident log + checkpoints
+  anchor.py        quorum-signed checkpoints published externally;
+                   catches operator truncation
   signer.py        a single independent signing node
-  orchestrator.py  the broker: mediate, tier, co-sign, log
-  sdk.py           PraetorClient.guarded(...) agent integration
-  server.py        FastAPI surface (5 nodes embedded in-process)
+  node_server.py   standalone FastAPI service for one signer (per host)
+  remote.py        orchestrator-side client for remote signers (fail-closed)
+  orchestrator.py  the broker: mediate, tier, co-sign, bind tokens, log, anchor
+  sdk.py           PraetorClient.guarded(...) + AgentIdentity (proof of possession)
+  server.py        FastAPI surface (embedded nodes, or PRAETOR_NODE_URLS)
 demo.py            end-to-end story
-tests/             pytest suite (crypto, policy, audit, orchestrator, sdk)
+docker-compose.yml orchestrator + 5 physically separated signer containers
+tests/             pytest suite (25 tests)
+SECURITY.md        threat model, trust assumptions, design rationale
 ```
 
-## Scope of this MVP
+## Scope (v0.2)
 
-This is a **single-process proof of the security model**: the five signing
-nodes run in-process so the whole reference monitor starts from one command.
-The design intentionally maps onto a real deployment where each node is its own
-host, capability tokens are signed JWT-style blobs, and audit checkpoints are
-anchored to an external transparency log. Those are the next build steps, not
-gaps in the model.
+What's real today: m-of-n Ed25519 co-signing with per-tier escalation,
+sender-bound (proof-of-possession) capability tokens, hash-chained audit with
+quorum-signed external anchoring, and signer nodes that run as **separate
+containers/hosts** via docker compose. Each node independently re-derives an
+action's risk tier — a compromised orchestrator can't downgrade an action to
+collect easier signatures, and it holds no signing keys at all.
+
+What's still ahead (see [SECURITY.md](SECURITY.md) for the full model):
+mTLS between orchestrator and nodes, anchoring to a public transparency
+service out of the box, and an MCP proxy so any MCP-speaking agent can be
+mediated with zero code changes.

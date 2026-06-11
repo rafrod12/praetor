@@ -1,0 +1,63 @@
+# Praetor with physically separated signer nodes.
+#
+#   docker compose up --build
+#
+# Five signer containers each hold their own Ed25519 key; the orchestrator
+# can only collect signatures, never sign for a node. Authorizing a high-risk
+# action requires 3 of the 5 *containers* to independently agree
+# (4 of 5 for critical actions).
+#
+# For production: run each node on a separate host/provider and inject
+# PRAETOR_NODE_SEED per node as a secret so identities survive restarts.
+
+services:
+  orchestrator:
+    build: .
+    ports:
+      - "8088:8088"
+    environment:
+      PRAETOR_THRESHOLD: "3"
+      PRAETOR_NODE_URLS: "http://node1:9000,http://node2:9000,http://node3:9000,http://node4:9000,http://node5:9000"
+      PRAETOR_ANCHOR_PATH: "/anchors/checkpoints.jsonl"
+      PRAETOR_ANCHOR_EVERY: "20"
+    volumes:
+      - anchors:/anchors
+    depends_on:
+      - node1
+      - node2
+      - node3
+      - node4
+      - node5
+
+  node1:
+    build: .
+    command: ["python", "-m", "uvicorn", "praetor.node_server:app", "--host", "0.0.0.0", "--port", "9000"]
+    environment:
+      PRAETOR_NODE_ID: "node-1"
+
+  node2:
+    build: .
+    command: ["python", "-m", "uvicorn", "praetor.node_server:app", "--host", "0.0.0.0", "--port", "9000"]
+    environment:
+      PRAETOR_NODE_ID: "node-2"
+
+  node3:
+    build: .
+    command: ["python", "-m", "uvicorn", "praetor.node_server:app", "--host", "0.0.0.0", "--port", "9000"]
+    environment:
+      PRAETOR_NODE_ID: "node-3"
+
+  node4:
+    build: .
+    command: ["python", "-m", "uvicorn", "praetor.node_server:app", "--host", "0.0.0.0", "--port", "9000"]
+    environment:
+      PRAETOR_NODE_ID: "node-4"
+
+  node5:
+    build: .
+    command: ["python", "-m", "uvicorn", "praetor.node_server:app", "--host", "0.0.0.0", "--port", "9000"]
+    environment:
+      PRAETOR_NODE_ID: "node-5"
+
+volumes:
+  anchors:

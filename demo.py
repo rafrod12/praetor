@@ -1,8 +1,8 @@
 """End-to-end Praetor demo -- run with: python demo.py
 
 Tells the whole story in one script:
-  1. A safe read         -> low-risk capability token path.
-  2. A risky payment     -> 3-of-5 threshold co-sign, approved.
+  1. A safe read         -> low-risk, sender-bound capability token path.
+  2. A $250k payment     -> CRITICAL risk, escalated 4-of-5 co-sign, approved.
   3. A forbidden action  -> statically denied, logged.
   4. A degraded cluster  -> only 2 nodes available, quorum fails, payment denied.
   5. Tamper attempt       -> someone edits the audit log; verify() catches it.
@@ -57,8 +57,8 @@ def main() -> None:
     except PraetorDenied as e:
         print(f"  blocked: {e}")
 
-    # 2. Risky payment -> 3-of-5 threshold co-sign ------------------------
-    banner("2. Wire payment $250,000 (high-risk, threshold co-sign)")
+    # 2. Risky payment -> escalated threshold co-sign ----------------------
+    banner("2. Wire payment $250,000 (CRITICAL: amount >= $10k escalates to 4-of-5)")
     try:
         agent.guarded(
             "payment",
